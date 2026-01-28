@@ -72,11 +72,13 @@ export default function WeeklyQuiz() {
 
   const loadQuestions = async (week) => {
   try {
-    console.log('Loading questions...');
+    console.log('Loading questions for week:', week);
     
     const { data, error } = await supabase
       .from('quiz_questions')
-      .select('*');
+      .select('*')
+      .eq('week_number', week)
+      .limit(10);
     
     console.log('Data:', data);
     console.log('Error:', error);
@@ -97,7 +99,7 @@ export default function WeeklyQuiz() {
       })));
       setStartTime(Date.now());
     } else {
-      console.log('No questions found');
+      console.log('No questions found for week', week);
     }
   } catch (error) {
     console.error('Catch error:', error);
