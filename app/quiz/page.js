@@ -72,7 +72,7 @@ export default function WeeklyQuiz() {
   const loadQuestions = async (week) => {
   try {
     const { data, error } = await supabase
-      .from('public_quiz_questions')
+      .from('quiz_questions')
       .select('*')
       .eq('week_number', week)
       .limit(10);
@@ -114,7 +114,7 @@ export default function WeeklyQuiz() {
   const checkQuestionsRemaining = async () => {
     try {
       const { count, error } = await supabase
-        .from('public_quiz_questions')
+        .from('quiz_questions')
         .select('*', { count: 'exact', head: true })
         .is('week_number', null);
 
