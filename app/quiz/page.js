@@ -71,15 +71,22 @@ export default function WeeklyQuiz() {
 
   const loadQuestions = async (week) => {
   try {
+    console.log('Loading questions...');
+    
     const { data, error } = await supabase
       .from('quiz_questions')
-      .select('*')
-      .eq('week_number', week)
-      .limit(10);
+      .select('*');
     
-    if (error) throw error;
+    console.log('Data:', data);
+    console.log('Error:', error);
+    
+    if (error) {
+      console.log('Supabase error:', error.message);
+      return;
+    }
     
     if (data && data.length > 0) {
+      console.log('Found questions:', data.length);
       setQuestions(data.map(q => ({
         id: q.id,
         question: q.question,
@@ -88,9 +95,11 @@ export default function WeeklyQuiz() {
         explanation: q.explanation
       })));
       setStartTime(Date.now());
+    } else {
+      console.log('No questions found');
     }
   } catch (error) {
-    console.error('Error loading questions:', error);
+    console.error('Catch error:', error);
   }
 };
 
