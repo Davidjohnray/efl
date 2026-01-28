@@ -54,7 +54,7 @@ export default function WeeklyQuiz() {
         .from('quiz_scores')
         .select('*')
         .eq('user_id', user.id)
-        .eq('week_number', week)
+       .gte('week_number', 1)
         .single();
 
       if (existingScore) {
