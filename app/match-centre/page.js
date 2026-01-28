@@ -1,5 +1,31 @@
 'use client';
+import { NextResponse } from 'next/server';
 
+const KEY = 'c56525a302b283561295aba8f804c48d';
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const endpoint = searchParams.get('endpoint');
+  
+  if (!endpoint) {
+    return NextResponse.json({ error: 'Missing endpoint' }, { status: 400 });
+  }
+
+  try {
+    const response = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
+      headers: {
+        'x-apisports-key': KEY
+      },
+      cache: 'no-store'
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+  }
+}
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Trophy, Calendar, Clock, TrendingUp, Target, BarChart3, Users, AlertTriangle, ArrowRightLeft, Star, Loader2 } from 'lucide-react';
@@ -21,11 +47,13 @@ export default function MatchCentre() {
   const KEY = 'c56525a302b283561295aba8f804c48d';
 
   const get = async (url) => {
-    const r = await fetch(url, { headers: { 'x-apisports-key': KEY }});
-    const d = await r.json();
-    console.log(url, '→', d.response?.length || 0, 'matches');
-    return d.response || [];
-  };
+  // Extract the endpoint part from the full URL
+  const endpoint = url.replace('https://v3.football.api-sports.io/', '');
+  const r = await fetch(`/api/football?endpoint=${encodeURIComponent(endpoint)}`);
+  const d = await r.json();
+  console.log(endpoint, '→', d.response?.length || 0, 'matches');
+  return d.response || [];
+};
 
   const date = (offset) => {
     const d = new Date();
