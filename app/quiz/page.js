@@ -70,25 +70,29 @@ export default function WeeklyQuiz() {
   };
 
   const loadQuestions = async (week) => {
-    try {
-      const { data, error } = await supabase.rpc('get_weekly_questions', { target_week: week });
-      
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setQuestions(data.map(q => ({
-          id: q.id,
-          question: q.question,
-          options: [q.option_a, q.option_b, q.option_c, q.option_d],
-          correctAnswer: q.correct_answer,
-          explanation: q.explanation
-        })));
-        setStartTime(Date.now());
-      }
-    } catch (error) {
-      console.error('Error loading questions:', error);
+  try {
+    const { data, error } = await supabase
+      .from('quiz_questions')
+      .select('*')
+      .eq('week_number', week)
+      .limit(10);
+    
+    if (error) throw error;
+    
+    if (data && data.length > 0) {
+      setQuestions(data.map(q => ({
+        id: q.id,
+        question: q.question,
+        options: [q.option_a, q.option_b, q.option_c, q.option_d],
+        correctAnswer: q.correct_answer,
+        explanation: q.explanation
+      })));
+      setStartTime(Date.now());
     }
-  };
+  } catch (error) {
+    console.error('Error loading questions:', error);
+  }
+};
 
   const loadLeaderboard = async (week) => {
     try {
