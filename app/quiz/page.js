@@ -40,6 +40,7 @@ export default function WeeklyQuiz() {
   }, []);
 
   const checkUser = async (week) => {
+  console.log('checkUser called, supabase is:', supabase);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data: profile } = await supabase
