@@ -89,20 +89,20 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-orange-900/20"></div>
       </div>
 
-      {/* Content */}
+    {/* Content */}
       <div className="relative z-10">
         {/* Header */}
         <header className="bg-slate-900/70 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-700 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <Trophy className="w-6 h-6 text-white" />
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-orange-700 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 flex-shrink-0">
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-white text-center tracking-tight">
+                <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-white text-center tracking-tight">
                   EFL League One & Two
                 </h1>
-                <p className="text-slate-300 text-center mt-1">
+                <p className="text-xs sm:text-sm md:text-base text-slate-300 text-center mt-0.5 sm:mt-1">
                   Your complete guide to English Football League
                 </p>
               </div>
