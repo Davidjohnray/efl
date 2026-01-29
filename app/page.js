@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Trophy, Users, Radio, BarChart3, TrendingUp, Brain, MessageSquare, Headphones } from 'lucide-react';
+import HitCounter from './components/HitCounter';
 
 export default function HomePage() {
   const navigationButtons = [
@@ -167,11 +168,12 @@ export default function HomePage() {
         </main>
 
         {/* Footer */}
-        <footer className="mt-16 bg-slate-900/70 backdrop-blur-md border-t border-slate-700/50">
-          <div className="max-w-7xl mx-auto px-4 py-6 text-center text-slate-400">
-            <p>© 2026 EFL League One & Two Hub. All rights reserved.</p>
-          </div>
-        </footer>
+<footer className="mt-16 bg-slate-900/70 backdrop-blur-md border-t border-slate-700/50">
+  <div className="max-w-7xl mx-auto px-4 py-6 text-center text-slate-400">
+    <HitCounter />
+    <p>© 2026 EFL League One & Two Hub. All rights reserved.</p>
+  </div>
+</footer>
       </div>
     </div>
   );
