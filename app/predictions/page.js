@@ -2,10 +2,11 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trophy, TrendingUp, User, LogOut, LogIn, Clock, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import Script from 'next/script';
 
 export default function Predictions() {
   const router = useRouter();
@@ -22,8 +23,20 @@ export default function Predictions() {
   const [activeTab, setActiveTab] = useState('predict');
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
 
   const KEY = 'c56525a302b283561295aba8f804c48d';
+
+  const handleTurnstileLoad = () => {
+    if (window.turnstile && turnstileRef.current) {
+      window.turnstile.render(turnstileRef.current, {
+        sitekey: '0x4AAAAAACVOsqlcUR2RD-Lo',
+        callback: (token) => setTurnstileToken(token),
+        'expired-callback': () => setTurnstileToken(''),
+      });
+    }
+  };
 
   useEffect(() => {
     checkUser();
@@ -107,6 +120,11 @@ export default function Predictions() {
   };
 
   const handleAuth = async () => {
+    if (!turnstileToken) {
+      alert('Please complete the captcha');
+      return;
+    }
+    
     setAuthLoading(true);
     
     try {
@@ -141,6 +159,10 @@ export default function Predictions() {
       setUsername('');
       setEmail('');
       setPassword('');
+      setTurnstileToken('');
+      if (window.turnstile && turnstileRef.current) {
+        window.turnstile.reset(turnstileRef.current);
+      }
     }
   };
 
@@ -271,9 +293,13 @@ export default function Predictions() {
         </div>
       </header>
 
-      {/* Auth Modal - RESPONSIVE */}
+      {/* Auth Modal with Captcha */}
       {showAuth && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowAuth(false)}>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            onLoad={handleTurnstileLoad}
+          />
           <div className="bg-slate-800 rounded-xl p-4 sm:p-8 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">{authMode === 'login' ? 'Login' : 'Create Account'}</h2>
             
@@ -313,16 +339,27 @@ export default function Predictions() {
                 />
               </div>
 
+              {/* Turnstile Captcha */}
+              <div className="flex justify-center">
+                <div ref={turnstileRef}></div>
+              </div>
+
               <button 
                 onClick={handleAuth} 
-                disabled={authLoading}
+                disabled={authLoading || !turnstileToken}
                 className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition disabled:opacity-50 text-sm sm:text-base"
               >
                 {authLoading ? 'Please wait...' : (authMode === 'login' ? 'Login' : 'Create Account')}
               </button>
 
               <button 
-                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                onClick={() => {
+                  setAuthMode(authMode === 'login' ? 'register' : 'login');
+                  setTurnstileToken('');
+                  if (window.turnstile && turnstileRef.current) {
+                    window.turnstile.reset(turnstileRef.current);
+                  }
+                }}
                 className="w-full text-slate-400 hover:text-white transition text-xs sm:text-sm"
               >
                 {authMode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
