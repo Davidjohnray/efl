@@ -284,8 +284,7 @@ export default function PostDetail({ params }) {
           ) : (
             <div className="p-4 border-b border-slate-700 text-center">
               <p className="text-slate-400">
-                <a href="/predictions" className="text-orange-400 underline font-bold hover:text-orange-300">Login</a> to comment
-              </p>
+<a href="/auth?returnTo=/fansforum" className="text-orange-400 underline font-bold hover:text-orange-300">Login</a>              </p>
             </div>
           )}
 

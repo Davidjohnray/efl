@@ -236,8 +236,7 @@ export default function ClubForum({ params }) {
         {!user && (
           <div className="bg-orange-900/30 border-2 border-orange-600 rounded-lg p-4 mb-6 text-center">
             <p className="text-orange-200">
-              <a href="/predictions" className="underline font-bold hover:text-white">Login</a> to create posts and join the conversation!
-            </p>
+<a href="/auth?returnTo=/fansforum" className="underline font-bold hover:text-white">Login</a>            </p>
           </div>
         )}
 
