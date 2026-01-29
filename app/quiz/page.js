@@ -26,12 +26,14 @@ export default function WeeklyQuiz() {
 
   // Calculate week number (weeks since Jan 1, 2026)
   const getWeekNumber = () => {
-    const startDate = new Date('2026-01-01');
-    const today = new Date();
-    const diffTime = today - startDate;
-    const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
-    return diffWeeks + 1;
-  };
+  const week4Start = new Date('2026-01-26'); // Week 4 starts Jan 26
+  week4Start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffTime = today - week4Start;
+  const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
+  return diffWeeks + 4; // Starts at week 4
+};
 
   useEffect(() => {
     const week = getWeekNumber();
