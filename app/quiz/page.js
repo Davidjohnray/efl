@@ -296,10 +296,11 @@ export default function WeeklyQuiz() {
                 EFL Weekly Quiz - Week {weekNumber}
               </h1>
               <button
-  onClick={() => router.push('/auth?returnTo=/quiz')}
-  className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700"
+  onClick={() => router.push('/')}
+  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
 >
-  Login / Register
+  <ArrowLeft className="w-4 h-4" />
+  Back Home
 </button>
             </div>
           </div>
