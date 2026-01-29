@@ -395,11 +395,11 @@ export default function WeeklyQuiz() {
               Please login to take the weekly quiz and compete on the leaderboard!
             </p>
             <button
-              onClick={() => router.push('/predictions')}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700"
-            >
-              Login / Register
-            </button>
+  onClick={() => router.push('/auth?returnTo=/quiz')}
+  className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700"
+>
+  Login / Register
+</button>
           </div>
         </main>
       </div>
