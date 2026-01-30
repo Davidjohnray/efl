@@ -21,6 +21,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#ea580c" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-R1G10L3TE0"
           strategy="afterInteractive"
@@ -31,6 +34,13 @@ export default function RootLayout({ children }) {
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-R1G10L3TE0');
+          `}
+        </Script>
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/sw.js');
+            }
           `}
         </Script>
       </head>
