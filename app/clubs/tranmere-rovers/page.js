@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ClubHeader from '@/app/components/ClubHeader';
 import { Home, Users, Trophy, TrendingUp, TrendingDown, Target, Calendar, MapPin, Award, Anchor, Ship, Waves } from 'lucide-react';
 
 export default function TranmereRoversFC() {
@@ -64,34 +65,13 @@ export default function TranmereRoversFC() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white">
-      <header className="bg-gradient-to-r from-white to-blue-100 text-blue-900 border-b-4 border-blue-500 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-blue-900 rounded-full flex items-center justify-center shadow-lg">
-                <Ship className="w-10 h-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold text-blue-900">{clubData.name}</h1>
-                <div className="flex items-center mt-2">
-                  <p className="text-blue-700 text-xl">{clubData.nickname}</p>
-                  <span className="ml-3 px-3 py-1 bg-blue-900 text-white rounded-full text-xs font-bold">
-                    {clubData.status}
-                  </span>
-                </div>
-                <p className="text-blue-600 text-sm mt-1 italic">{clubData.season} Season - League Two</p>
-              </div>
-            </div>
-            <button
-              onClick={() => window.location.href = '/clubs'}
-              className="px-6 py-3 bg-blue-900 hover:bg-blue-800 text-white rounded-lg transition-colors font-bold shadow-md"
-            >
-              Back to Clubs
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 to-slate-900 overflow-x-hidden">      <ClubHeader 
+          name={clubData.name}
+          nickname={clubData.nickname}
+          initials="BFC"
+          season="Season 2025-26"
+          color="red"
+        />
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">

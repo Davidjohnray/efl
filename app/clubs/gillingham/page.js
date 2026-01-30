@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ClubHeader from '@/app/components/ClubHeader';
 import { Home, Users, Trophy, TrendingUp, TrendingDown, Target, Calendar, MapPin, Award } from 'lucide-react';
 
 export default function GillinghamFC() {
@@ -61,29 +62,13 @@ export default function GillinghamFC() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      <header className="bg-gradient-to-r from-blue-700 to-blue-900 text-white border-b-4 border-blue-950 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-3xl font-bold text-blue-700">GFC</span>
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold text-white">{clubData.name}</h1>
-                <p className="text-blue-100 text-xl mt-2">{clubData.nickname}</p>
-                <p className="text-blue-100 text-sm mt-1 italic">{clubData.season} Season - League Two</p>
-              </div>
-            </div>
-            <button
-              onClick={() => window.location.href = '/clubs'}
-              className="px-6 py-3 bg-white hover:bg-blue-50 text-blue-700 rounded-lg transition-colors font-bold"
-            >
-              Back to Clubs
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 to-slate-900 overflow-x-hidden">      <ClubHeader 
+          name={clubData.name}
+          nickname={clubData.nickname}
+          initials="BFC"
+          season="Season 2025-26"
+          color="red"
+        />
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">

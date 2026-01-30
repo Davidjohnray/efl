@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ClubHeader from '@/app/components/ClubHeader';
 import { Home, Users, Trophy, TrendingUp, TrendingDown, Target, Calendar, MapPin, Award } from 'lucide-react';
 
 export default function AccringtonStanleyPage() {
@@ -33,155 +34,143 @@ export default function AccringtonStanleyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 to-slate-900">
-      <header className="bg-gradient-to-r from-red-800/50 to-red-600/10 backdrop-blur-sm border-b border-red-700">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-3xl font-bold text-red-600">ASFC</span>
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold text-white">{clubData.name}</h1>
-                <p className="text-red-200 text-xl mt-2">{clubData.nickname}</p>
-                <p className="text-slate-300 text-sm mt-1 italic">57th Season (2025-26)</p>
-              </div>
-            </div>
-            <button
-              onClick={() => window.location.href = '/clubs'}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-            >
-              Back to Clubs
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 to-slate-900 overflow-x-hidden">
+      <ClubHeader 
+        name={clubData.name}
+        nickname={clubData.nickname}
+        initials="ASFC"
+        season="57th Season (2025-26)"
+        color="red"
+      />
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-            <Calendar className="w-8 h-8 text-red-400 mb-2" />
-            <p className="text-slate-400 text-sm">Founded (Reformed)</p>
-            <p className="text-white text-2xl font-bold">{clubData.founded}</p>
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-12">
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-6 border border-slate-700">
+            <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 mb-2" />
+            <p className="text-slate-400 text-xs sm:text-sm">Founded</p>
+            <p className="text-white text-lg sm:text-2xl font-bold">{clubData.founded}</p>
           </div>
-          <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-            <Home className="w-8 h-8 text-green-400 mb-2" />
-            <p className="text-slate-400 text-sm">Stadium</p>
-            <p className="text-white text-lg font-bold">{clubData.stadium}</p>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-6 border border-slate-700">
+            <Home className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 mb-2" />
+            <p className="text-slate-400 text-xs sm:text-sm">Stadium</p>
+            <p className="text-white text-sm sm:text-lg font-bold">{clubData.stadium}</p>
           </div>
-          <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-            <Users className="w-8 h-8 text-purple-400 mb-2" />
-            <p className="text-slate-400 text-sm">Capacity</p>
-            <p className="text-white text-2xl font-bold">{clubData.capacity}</p>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-6 border border-slate-700">
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400 mb-2" />
+            <p className="text-slate-400 text-xs sm:text-sm">Capacity</p>
+            <p className="text-white text-lg sm:text-2xl font-bold">{clubData.capacity}</p>
           </div>
-          <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-            <MapPin className="w-8 h-8 text-red-400 mb-2" />
-            <p className="text-slate-400 text-sm">Location</p>
-            <p className="text-white text-base font-bold">{clubData.location}</p>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-6 border border-slate-700">
+            <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 mb-2" />
+            <p className="text-slate-400 text-xs sm:text-sm">Location</p>
+            <p className="text-white text-xs sm:text-base font-bold">{clubData.location}</p>
           </div>
         </div>
 
-        <section className="bg-slate-800 rounded-xl p-8 border border-slate-700 mb-8">
-          <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
-            <Award className="w-8 h-8 mr-3 text-yellow-400" />
+        {/* Club History */}
+        <section className="bg-slate-800 rounded-xl p-4 sm:p-8 border border-slate-700 mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-3xl font-bold text-white mb-4 sm:mb-6 flex items-center">
+            <Award className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-yellow-400" />
             Club History
           </h2>
-          <div className="space-y-6 text-slate-300 leading-relaxed">
+          <div className="space-y-4 sm:space-y-6 text-slate-300 text-sm sm:text-base leading-relaxed">
             <div>
-              <h3 className="text-xl font-bold text-white mb-3">The Reformation (1968)</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">The Reformation (1968)</h3>
               <p>{clubData.history.founding}</p>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-3">The Rise Back (1990s-2006)</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">The Rise Back (1990s-2006)</h3>
               <p>{clubData.history.rise}</p>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-3">Football League Era</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Football League Era</h3>
               <p>{clubData.history.modernEra}</p>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-3">The Wham Stadium (Crown Ground)</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">The Wham Stadium</h3>
               <p>{clubData.history.notable}</p>
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <div className="flex items-center mb-4">
-              <TrendingUp className="w-8 h-8 text-green-400 mr-3" />
-              <h3 className="text-2xl font-bold text-white">Record Signing</h3>
+        {/* Record Signing & Sale */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700">
+            <div className="flex items-center mb-3 sm:mb-4">
+              <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 mr-2 sm:mr-3" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white">Record Signing</h3>
             </div>
-            <div className="space-y-2">
-              <p className="text-3xl font-bold text-green-400">{clubData.recordSigning.fee}</p>
-              <p className="text-xl text-white">{clubData.recordSigning.player}</p>
-              <p className="text-slate-400">From {clubData.recordSigning.from} • {clubData.recordSigning.year}</p>
-            </div>
-          </div>
-
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <div className="flex items-center mb-4">
-              <TrendingDown className="w-8 h-8 text-red-400 mr-3" />
-              <h3 className="text-2xl font-bold text-white">Record Sale</h3>
-            </div>
-            <div className="space-y-2">
-              <p className="text-3xl font-bold text-red-400">{clubData.recordSale.fee}</p>
-              <p className="text-xl text-white">{clubData.recordSale.player}</p>
-              <p className="text-slate-400">To {clubData.recordSale.to} • {clubData.recordSale.year}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <div className="flex items-center mb-4">
-              <Target className="w-8 h-8 text-red-400 mr-3" />
-              <h3 className="text-2xl font-bold text-white">All-Time Top Scorer</h3>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold text-white">{clubData.topScorer.name}</p>
-                <p className="text-slate-400 text-lg">{clubData.topScorer.years}</p>
-                <p className="text-slate-500 text-sm">All competitions</p>
-              </div>
-              <div className="text-right">
-                <p className="text-5xl font-bold text-red-400">{clubData.topScorer.goals}</p>
-                <p className="text-slate-400">Goals</p>
-              </div>
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-2xl sm:text-3xl font-bold text-green-400">{clubData.recordSigning.fee}</p>
+              <p className="text-lg sm:text-xl text-white">{clubData.recordSigning.player}</p>
+              <p className="text-slate-400 text-sm">From {clubData.recordSigning.from} • {clubData.recordSigning.year}</p>
             </div>
           </div>
 
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <div className="flex items-center mb-4">
-              <Award className="w-8 h-8 text-purple-400 mr-3" />
-              <h3 className="text-2xl font-bold text-white">Most Appearances</h3>
+          <div className="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700">
+            <div className="flex items-center mb-3 sm:mb-4">
+              <TrendingDown className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 mr-2 sm:mr-3" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white">Record Sale</h3>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-3xl font-bold text-white">{clubData.mostAppearances.name}</p>
-                <p className="text-slate-400 text-lg">{clubData.mostAppearances.years}</p>
-                <p className="text-slate-500 text-sm">Club legend - two spells</p>
-              </div>
-              <div className="text-right">
-                <p className="text-5xl font-bold text-purple-400">{clubData.mostAppearances.apps}</p>
-                <p className="text-slate-400">Games</p>
-              </div>
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-2xl sm:text-3xl font-bold text-red-400">{clubData.recordSale.fee}</p>
+              <p className="text-lg sm:text-xl text-white">{clubData.recordSale.player}</p>
+              <p className="text-slate-400 text-sm">To {clubData.recordSale.to} • {clubData.recordSale.year}</p>
             </div>
           </div>
         </div>
 
-        <section className="bg-slate-800 rounded-xl p-8 border border-slate-700">
-          <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
-            <Trophy className="w-8 h-8 mr-3 text-yellow-400" />
-            Honours & Achievements
+        {/* Top Scorer & Most Appearances */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700">
+            <div className="flex items-center mb-3 sm:mb-4">
+              <Target className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 mr-2 sm:mr-3" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white">Top Scorer</h3>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xl sm:text-3xl font-bold text-white">{clubData.topScorer.name}</p>
+                <p className="text-slate-400 text-sm sm:text-lg">{clubData.topScorer.years}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl sm:text-5xl font-bold text-red-400">{clubData.topScorer.goals}</p>
+                <p className="text-slate-400 text-xs sm:text-base">Goals</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700">
+            <div className="flex items-center mb-3 sm:mb-4">
+              <Award className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400 mr-2 sm:mr-3" />
+              <h3 className="text-lg sm:text-2xl font-bold text-white">Most Appearances</h3>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xl sm:text-3xl font-bold text-white">{clubData.mostAppearances.name}</p>
+                <p className="text-slate-400 text-sm sm:text-lg">{clubData.mostAppearances.years}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl sm:text-5xl font-bold text-purple-400">{clubData.mostAppearances.apps}</p>
+                <p className="text-slate-400 text-xs sm:text-base">Games</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Honours */}
+        <section className="bg-slate-800 rounded-xl p-4 sm:p-8 border border-slate-700">
+          <h2 className="text-xl sm:text-3xl font-bold text-white mb-4 sm:mb-6 flex items-center">
+            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-yellow-400" />
+            Honours
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             {clubData.honours.map((honour, index) => (
-              <div key={index} className="bg-slate-900/50 rounded-lg p-4 border border-slate-600">
-                <h3 className="text-xl font-bold text-yellow-400 mb-2">{honour.title}</h3>
-                <div className="flex flex-wrap gap-2">
+              <div key={index} className="bg-slate-900/50 rounded-lg p-3 sm:p-4 border border-slate-600">
+                <h3 className="text-base sm:text-xl font-bold text-yellow-400 mb-2">{honour.title}</h3>
+                <div className="flex flex-wrap gap-1 sm:gap-2">
                   {honour.years.map((year, yearIndex) => (
-                    <span key={yearIndex} className="px-3 py-1 bg-slate-700 text-white rounded-full text-sm">
+                    <span key={yearIndex} className="px-2 sm:px-3 py-1 bg-slate-700 text-white rounded-full text-xs sm:text-sm">
                       {year}
                     </span>
                   ))}

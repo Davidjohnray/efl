@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ClubHeader from '@/app/components/ClubHeader';
 import { Home, Users, Trophy, TrendingUp, TrendingDown, Target, Calendar, MapPin, Award, Heart, Cross } from 'lucide-react';
 
 export default function BarnsleyFC() {
@@ -63,34 +64,13 @@ export default function BarnsleyFC() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-black to-red-900">
-      <header className="bg-gradient-to-r from-black to-red-800 text-white border-b-4 border-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-3xl font-bold text-red-800">BFC</span>
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold text-white">{clubData.name}</h1>
-                <div className="flex items-center mt-2">
-                  <p className="text-red-200 text-xl">{clubData.nickname}</p>
-                  <span className="ml-3 px-3 py-1 bg-yellow-600 text-white rounded-full text-xs font-bold">
-                    {clubData.status}
-                  </span>
-                </div>
-                <p className="text-red-300 text-sm mt-1 italic">Competing in League One</p>
-              </div>
-            </div>
-            <button
-              onClick={() => window.location.href = '/clubs'}
-              className="px-6 py-3 bg-white hover:bg-gray-100 text-red-800 rounded-lg transition-colors font-bold shadow-md"
-            >
-              Back to Clubs
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 to-slate-900 overflow-x-hidden">      <ClubHeader 
+          name={clubData.name}
+          nickname={clubData.nickname}
+          initials="BFC"
+          season="Season 2025-26"
+          color="red"
+        />
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">

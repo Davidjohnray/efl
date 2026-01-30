@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import ClubHeader from '@/app/components/ClubHeader';
 import { Trophy, Users, Radio, BarChart3, TrendingUp, Brain, MessageSquare, Headphones } from 'lucide-react';
 import HitCounter from './components/HitCounter';
 

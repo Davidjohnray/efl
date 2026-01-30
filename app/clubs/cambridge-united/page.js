@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import ClubHeader from '@/app/components/ClubHeader';
 import { Home, Users, Trophy, TrendingUp, TrendingDown, Target, Calendar, MapPin, Award } from 'lucide-react';
 
 export default function CambridgeUnitedPage() {
@@ -36,29 +37,13 @@ export default function CambridgeUnitedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-white">
-      <header className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black border-b-4 border-black shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-3xl font-bold text-amber-400">U</span>
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold text-black">{clubData.name}</h1>
-                <p className="text-black text-xl mt-2">{clubData.nickname}</p>
-                <p className="text-slate-800 text-sm mt-1 italic">{clubData.season} Season - League Two</p>
-              </div>
-            </div>
-            <button
-              onClick={() => window.location.href = '/clubs'}
-              className="px-6 py-3 bg-black hover:bg-slate-800 text-amber-400 rounded-lg transition-colors"
-            >
-              Back to Clubs
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-slate-900 to-slate-900 overflow-x-hidden">      <ClubHeader 
+          name={clubData.name}
+          nickname={clubData.nickname}
+          initials="BFC"
+          season="Season 2025-26"
+          color="red"
+        />
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
