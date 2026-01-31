@@ -4,42 +4,30 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trophy, TrendingUp, User, LogOut, LogIn, Clock, ArrowLeft } from 'lucide-react';
+import { Trophy, User, LogOut, LogIn, Clock, ArrowLeft, UserPlus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Script from 'next/script';
 
 export default function Predictions() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [guestNickname, setGuestNickname] = useState('');
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState('');
   const [fixtures, setFixtures] = useState([]);
   const [predictions, setPredictions] = useState({});
   const [inputValues, setInputValues] = useState({});
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [activeTab, setActiveTab] = useState('predict');
   const [loading, setLoading] = useState(true);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState('');
-  const turnstileRef = useRef(null);
 
   const KEY = 'c56525a302b283561295aba8f804c48d';
 
-  const handleTurnstileLoad = () => {
-    if (window.turnstile && turnstileRef.current) {
-      window.turnstile.render(turnstileRef.current, {
-        sitekey: '0x4AAAAAACVOsqlcUR2RD-Lo',
-        callback: (token) => setTurnstileToken(token),
-        'expired-callback': () => setTurnstileToken(''),
-      });
-    }
-  };
-
   useEffect(() => {
     checkUser();
+    // Check for saved guest nickname
+    const savedNickname = localStorage.getItem('guestNickname');
+    if (savedNickname) {
+      setGuestNickname(savedNickname);
+    }
   }, []);
 
   const checkUser = async () => {
@@ -82,7 +70,6 @@ export default function Predictions() {
     }
 
     setFixtures(allFixtures.sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date)));
-    await loadLeaderboard();
   };
 
   const loadUserPredictions = async (userId) => {
@@ -106,64 +93,25 @@ export default function Predictions() {
     setPredictions(preds);
   };
 
-  const loadLeaderboard = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_leaderboard');
-      if (error) {
-        console.error('Error loading leaderboard:', error);
-        return;
-      }
-      setLeaderboard(data || []);
-    } catch (err) {
-      console.error('Caught error:', err);
-    }
-  };
+  const loadGuestPredictions = async (nickname) => {
+    const { data, error } = await supabase
+      .from('predictions')
+      .select('*')
+      .eq('guest_nickname', nickname);
 
-  const handleAuth = async () => {
-    if (!turnstileToken) {
-      alert('Please complete the captcha');
+    if (error) {
+      console.error('Error loading guest predictions:', error);
       return;
     }
-    
-    setAuthLoading(true);
-    
-    try {
-      if (authMode === 'register') {
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: username
-            }
-          }
-        });
 
-        if (signUpError) throw signUpError;
-        alert('Account created! Please check your email to verify your account.');
-        setAuthMode('login');
-      } else {
-        const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (signInError) throw signInError;
-        await checkUser();
-        setShowAuth(false);
-      }
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setAuthLoading(false);
-      setUsername('');
-      setEmail('');
-      setPassword('');
-      setTurnstileToken('');
-      if (window.turnstile && turnstileRef.current) {
-        window.turnstile.reset(turnstileRef.current);
-      }
-    }
+    const preds = {};
+    data.forEach(p => {
+      preds[p.fixture_id] = {
+        home: p.home_score,
+        away: p.away_score
+      };
+    });
+    setPredictions(preds);
   };
 
   const handleLogout = async () => {
@@ -172,6 +120,27 @@ export default function Predictions() {
     setPredictions({});
     setInputValues({});
     router.push('/');
+  };
+
+  const handleGuestLogout = () => {
+    localStorage.removeItem('guestNickname');
+    setGuestNickname('');
+    setPredictions({});
+    setInputValues({});
+  };
+
+  const handleNicknameSubmit = async () => {
+    if (!nicknameInput.trim()) {
+      alert('Please enter a nickname');
+      return;
+    }
+    
+    const nickname = nicknameInput.trim();
+    localStorage.setItem('guestNickname', nickname);
+    setGuestNickname(nickname);
+    setShowNicknameModal(false);
+    setNicknameInput('');
+    await loadGuestPredictions(nickname);
   };
 
   const handleInputChange = (fixtureId, field, value) => {
@@ -185,7 +154,10 @@ export default function Predictions() {
   };
 
   const submitPrediction = async (fixtureId) => {
-    if (!user) return;
+    if (!user && !guestNickname) {
+      setShowNicknameModal(true);
+      return;
+    }
 
     const input = inputValues[fixtureId] || {};
     const home = input.home;
@@ -211,20 +183,37 @@ export default function Predictions() {
     }
 
     try {
-      const { error } = await supabase
-        .from('predictions')
-        .upsert([
-          {
-            user_id: user.id,
-            fixture_id: fixtureId,
-            home_score: homeNum,
-            away_score: awayNum
-          }
-        ], {
-          onConflict: 'user_id,fixture_id'
-        });
+      if (user) {
+        // Logged in user
+        const { error } = await supabase
+          .from('predictions')
+          .upsert([
+            {
+              user_id: user.id,
+              fixture_id: fixtureId,
+              home_score: homeNum,
+              away_score: awayNum
+            }
+          ], {
+            onConflict: 'user_id,fixture_id'
+          });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Guest user
+        const { error } = await supabase
+          .from('predictions')
+          .insert([
+            {
+              guest_nickname: guestNickname,
+              fixture_id: fixtureId,
+              home_score: homeNum,
+              away_score: awayNum
+            }
+          ]);
+
+        if (error) throw error;
+      }
 
       setPredictions(prev => ({
         ...prev,
@@ -237,7 +226,6 @@ export default function Predictions() {
         return newInputs;
       });
 
-      await loadLeaderboard();
     } catch (error) {
       alert('Failed to save prediction: ' + error.message);
     }
@@ -256,7 +244,7 @@ export default function Predictions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      {/* Header - RESPONSIVE */}
+      {/* Header */}
       <header className="bg-gradient-to-r from-orange-900 to-orange-800 border-b-4 border-orange-700 sticky top-0 z-50 shadow-xl">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
@@ -278,10 +266,23 @@ export default function Predictions() {
                     <span className="hidden sm:inline">Logout</span>
                   </button>
                 </>
+              ) : guestNickname ? (
+                <>
+                  <div className="bg-white/10 px-2 sm:px-4 py-1 sm:py-2 rounded-lg">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      <span className="text-white font-bold text-xs sm:text-base truncate max-w-[80px] sm:max-w-none">{guestNickname}</span>
+                      <span className="text-orange-300 text-xs">(Guest)</span>
+                    </div>
+                  </div>
+                  <button onClick={handleGuestLogout} className="px-2 sm:px-4 py-1 sm:py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition text-xs sm:text-base">
+                    Change
+                  </button>
+                </>
               ) : (
-                <button onClick={() => setShowAuth(true)} className="px-3 sm:px-6 py-2 sm:py-3 bg-white text-orange-900 rounded-lg font-bold hover:bg-orange-50 transition flex items-center gap-1 sm:gap-2 text-xs sm:text-base">
+                <button onClick={() => setShowNicknameModal(true)} className="px-3 sm:px-6 py-2 sm:py-3 bg-white text-orange-900 rounded-lg font-bold hover:bg-orange-50 transition flex items-center gap-1 sm:gap-2 text-xs sm:text-base">
                   <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Login / Register
+                  Play Now
                 </button>
               )}
               <button onClick={() => router.push('/')} className="px-3 sm:px-6 py-2 sm:py-3 bg-white text-orange-900 rounded-lg font-bold hover:bg-orange-50 transition text-xs sm:text-base">
@@ -293,342 +294,216 @@ export default function Predictions() {
         </div>
       </header>
 
-      {/* Auth Modal with Captcha */}
-      {showAuth && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowAuth(false)}>
-          <Script
-            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-            onLoad={handleTurnstileLoad}
-          />
-          <div className="bg-slate-800 rounded-xl p-4 sm:p-8 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">{authMode === 'login' ? 'Login' : 'Create Account'}</h2>
+      {/* Nickname Modal */}
+      {showNicknameModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowNicknameModal(false)}>
+          <div className="bg-slate-800 rounded-xl p-6 sm:p-8 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">Enter Your Nickname</h2>
+            <p className="text-slate-400 mb-4 text-sm">Choose a nickname to track your predictions</p>
             
-            <div className="space-y-3 sm:space-y-4">
-              {authMode === 'register' && (
-                <div>
-                  <label className="block text-slate-300 mb-1 sm:mb-2 text-sm">Username</label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-2 sm:p-3 bg-slate-900 text-white rounded-lg border-2 border-slate-700 focus:border-orange-500 outline-none text-sm sm:text-base"
-                    placeholder="Choose a username"
-                  />
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-slate-300 mb-1 sm:mb-2 text-sm">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-2 sm:p-3 bg-slate-900 text-white rounded-lg border-2 border-slate-700 focus:border-orange-500 outline-none text-sm sm:text-base"
-                  placeholder="your@email.com"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-slate-300 mb-1 sm:mb-2 text-sm">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 sm:p-3 bg-slate-900 text-white rounded-lg border-2 border-slate-700 focus:border-orange-500 outline-none text-sm sm:text-base"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              {/* Turnstile Captcha */}
-              <div className="flex justify-center">
-                <div ref={turnstileRef}></div>
-              </div>
-
-              <button 
-                onClick={handleAuth} 
-                disabled={authLoading || !turnstileToken}
-                className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition disabled:opacity-50 text-sm sm:text-base"
-              >
-                {authLoading ? 'Please wait...' : (authMode === 'login' ? 'Login' : 'Create Account')}
-              </button>
-
-              <button 
+            <input
+              type="text"
+              value={nicknameInput}
+              onChange={(e) => setNicknameInput(e.target.value)}
+              placeholder="Your nickname"
+              className="w-full p-3 bg-slate-900 text-white rounded-lg border-2 border-slate-700 focus:border-orange-500 outline-none mb-4"
+              maxLength={20}
+            />
+            
+            <button
+              onClick={handleNicknameSubmit}
+              className="w-full py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition mb-4"
+            >
+              Start Playing
+            </button>
+            
+            <div className="text-center">
+              <p className="text-slate-400 text-sm mb-2">Want to see the leaderboard?</p>
+              <button
                 onClick={() => {
-                  setAuthMode(authMode === 'login' ? 'register' : 'login');
-                  setTurnstileToken('');
-                  if (window.turnstile && turnstileRef.current) {
-                    window.turnstile.reset(turnstileRef.current);
-                  }
+                  setShowNicknameModal(false);
+                  router.push('/auth?returnTo=/predictions');
                 }}
-                className="w-full text-slate-400 hover:text-white transition text-xs sm:text-sm"
+                className="text-orange-400 hover:text-orange-300 font-bold text-sm"
               >
-                {authMode === 'login' ? "Don't have an account? Register" : 'Already have an account? Login'}
+                Register for Free →
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Content - RESPONSIVE */}
-      {!user ? (
+      {/* Register Banner for Guests */}
+      {!user && guestNickname && (
+        <div className="bg-gradient-to-r from-indigo-900 to-indigo-800 border-b border-indigo-700">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <p className="text-indigo-200 text-sm text-center sm:text-left">
+                📊 Want to see your scores on the leaderboard? Register to become a member!
+              </p>
+              <button
+                onClick={() => router.push('/auth?returnTo=/members')}
+                className="px-4 py-1 bg-white text-indigo-900 rounded-lg font-bold text-sm hover:bg-indigo-50 transition flex items-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                Register Free
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!user && !guestNickname ? (
         <div className="max-w-7xl mx-auto px-4 py-8 sm:py-16">
           <div className="bg-slate-800 rounded-xl p-8 sm:p-16 text-center border-2 border-slate-700">
             <LogIn className="w-16 h-16 sm:w-24 sm:h-24 text-slate-600 mx-auto mb-4 sm:mb-6" />
-            <h2 className="text-xl sm:text-3xl font-bold text-white mb-2 sm:mb-4">Members Only</h2>
-            <p className="text-slate-400 mb-6 sm:mb-8 text-sm sm:text-base">Login or register to make predictions!</p>
-            <button onClick={() => setShowAuth(true)} className="px-6 sm:px-8 py-3 sm:py-4 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition text-sm sm:text-lg">
-              Login / Register
+            <h2 className="text-xl sm:text-3xl font-bold text-white mb-2 sm:mb-4">Ready to Predict?</h2>
+            <p className="text-slate-400 mb-6 sm:mb-8 text-sm sm:text-base">Enter a nickname to start making predictions!</p>
+            <button onClick={() => setShowNicknameModal(true)} className="px-6 sm:px-8 py-3 sm:py-4 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition text-sm sm:text-lg">
+              Play Now
             </button>
+            <p className="text-slate-500 mt-4 text-sm">
+              Already a member? <button onClick={() => router.push('/auth?returnTo=/predictions')} className="text-orange-400 hover:text-orange-300 font-bold">Login</button>
+            </p>
           </div>
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-          {/* Tabs - RESPONSIVE */}
-          <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-8">
-            <button 
-              onClick={() => setActiveTab('predict')}
-              className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold transition text-xs sm:text-base ${
-                activeTab === 'predict' ? 'bg-orange-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
-            >
-              📝 Predictions
-            </button>
-            <button 
-              onClick={() => setActiveTab('leaderboard')}
-              className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-bold transition text-xs sm:text-base ${
-                activeTab === 'leaderboard' ? 'bg-orange-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
-            >
-              🏆 Leaderboard
-            </button>
+          {/* Stats */}
+          <div className="bg-gradient-to-r from-orange-900 to-orange-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex justify-between">
+            <div>
+              <p className="text-white font-bold text-sm sm:text-base">Your Predictions</p>
+              <p className="text-orange-200 text-xs sm:text-sm">
+                {Object.keys(predictions).length} of {fixtures.length}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl sm:text-3xl font-bold text-white">{Object.keys(predictions).length}</p>
+              <p className="text-orange-200 text-xs sm:text-sm">Locked</p>
+            </div>
           </div>
 
-          {/* Predictions Tab - RESPONSIVE */}
-          {activeTab === 'predict' && (
-            <div>
-              {/* Stats */}
-              <div className="bg-gradient-to-r from-orange-900 to-orange-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex justify-between">
-                <div>
-                  <p className="text-white font-bold text-sm sm:text-base">Your Predictions</p>
-                  <p className="text-orange-200 text-xs sm:text-sm">
-                    {Object.keys(predictions).length} of {fixtures.length}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{Object.keys(predictions).length}</p>
-                  <p className="text-orange-200 text-xs sm:text-sm">Locked</p>
-                </div>
-              </div>
+          {/* Fixtures */}
+          <div className="space-y-3 sm:space-y-4">
+            {fixtures.map(fixture => {
+              const savedPred = predictions[fixture.fixture.id];
+              const input = inputValues[fixture.fixture.id] || {};
+              const isLocked = savedPred !== undefined;
+              const matchStarted = new Date(fixture.fixture.date) <= new Date();
+              const isDisabled = isLocked || matchStarted;
 
-              <div className="space-y-3 sm:space-y-4">
-                {fixtures.map(fixture => {
-                  const savedPred = predictions[fixture.fixture.id];
-                  const input = inputValues[fixture.fixture.id] || {};
-                  const isLocked = savedPred !== undefined;
-                  const matchStarted = new Date(fixture.fixture.date) <= new Date();
-                  const isDisabled = isLocked || matchStarted;
+              const displayHome = isLocked ? savedPred.home : (input.home ?? '');
+              const displayAway = isLocked ? savedPred.away : (input.away ?? '');
 
-                  const displayHome = isLocked ? savedPred.home : (input.home ?? '');
-                  const displayAway = isLocked ? savedPred.away : (input.away ?? '');
+              const canSubmit = !isDisabled && input.home !== undefined && input.home !== '' && input.away !== undefined && input.away !== '';
 
-                  const canSubmit = !isDisabled && input.home !== undefined && input.home !== '' && input.away !== undefined && input.away !== '';
-
-                  return (
-                    <div key={fixture.fixture.id} className={`bg-slate-800 rounded-lg p-3 sm:p-6 border-2 ${isDisabled ? 'border-slate-600 opacity-75' : 'border-slate-700'}`}>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-1 sm:gap-0">
-                        <span className="text-slate-400 text-xs sm:text-sm">{fixture.league.name}</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-slate-400 text-xs sm:text-sm">{new Date(fixture.fixture.date).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                          {isLocked && <span className="px-2 py-0.5 sm:py-1 bg-green-600 text-white text-xs rounded font-bold">✓</span>}
-                          {matchStarted && !isLocked && <span className="px-2 py-0.5 sm:py-1 bg-red-600 text-white text-xs rounded font-bold">Started</span>}
-                        </div>
-                      </div>
-
-                      {/* Mobile Layout */}
-                      <div className="block sm:hidden">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-white font-bold text-sm flex-1">{fixture.teams.home.name}</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="20"
-                            value={displayHome}
-                            onChange={(e) => handleInputChange(fixture.fixture.id, 'home', e.target.value)}
-                            disabled={isDisabled}
-                            className={`w-14 p-2 text-center text-xl font-bold rounded-lg border-2 outline-none ${
-                              isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
-                            }`}
-                            placeholder="-"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-white font-bold text-sm flex-1">{fixture.teams.away.name}</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="20"
-                            value={displayAway}
-                            onChange={(e) => handleInputChange(fixture.fixture.id, 'away', e.target.value)}
-                            disabled={isDisabled}
-                            className={`w-14 p-2 text-center text-xl font-bold rounded-lg border-2 outline-none ${
-                              isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
-                            }`}
-                            placeholder="-"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Desktop Layout */}
-                      <div className="hidden sm:grid grid-cols-7 gap-4 items-center">
-                        <div className="col-span-2 text-right">
-                          <span className="text-white font-bold">{fixture.teams.home.name}</span>
-                        </div>
-
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={displayHome}
-                          onChange={(e) => handleInputChange(fixture.fixture.id, 'home', e.target.value)}
-                          disabled={isDisabled}
-                          className={`p-3 text-center text-2xl font-bold rounded-lg border-2 outline-none ${
-                            isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
-                          }`}
-                          placeholder="-"
-                        />
-
-                        <div className="text-center"><span className="text-slate-500 font-bold">VS</span></div>
-
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={displayAway}
-                          onChange={(e) => handleInputChange(fixture.fixture.id, 'away', e.target.value)}
-                          disabled={isDisabled}
-                          className={`p-3 text-center text-2xl font-bold rounded-lg border-2 outline-none ${
-                            isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
-                          }`}
-                          placeholder="-"
-                        />
-
-                        <div className="col-span-2">
-                          <span className="text-white font-bold">{fixture.teams.away.name}</span>
-                        </div>
-                      </div>
-
-                      {canSubmit && (
-                        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-700 text-center">
-                          <button
-                            onClick={() => submitPrediction(fixture.fixture.id)}
-                            className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition text-sm sm:text-base"
-                          >
-                            🔒 Lock ({input.home} - {input.away})
-                          </button>
-                        </div>
-                      )}
-
-                      {isLocked && (
-                        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-700 text-center">
-                          <span className="text-green-400 text-xs sm:text-sm font-bold">✓ Locked: {savedPred.home} - {savedPred.away}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Leaderboard - RESPONSIVE */}
-          {activeTab === 'leaderboard' && (
-            <div className="bg-slate-800 rounded-xl overflow-hidden border-2 border-slate-700">
-              <div className="bg-gradient-to-r from-orange-900 to-orange-800 p-4 sm:p-6">
-                <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center">
-                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-yellow-400" />
-                  Leaderboard
-                </h2>
-              </div>
-
-              {/* Mobile Leaderboard */}
-              <div className="block sm:hidden">
-                {leaderboard.map((entry, index) => (
-                  <div key={entry.id} className={`p-3 border-b border-slate-700 ${entry.username === user?.username ? 'bg-orange-900/20' : ''}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          index === 0 ? 'bg-yellow-500 text-white' :
-                          index === 1 ? 'bg-gray-400 text-white' :
-                          index === 2 ? 'bg-orange-600 text-white' :
-                          'bg-slate-700 text-slate-300'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <span className={`text-white font-bold text-sm ${entry.username === user?.username ? 'text-orange-400' : ''}`}>
-                          {entry.username}
-                        </span>
-                      </div>
-                      <span className="text-xl font-bold text-white">{entry.total_points} pts</span>
-                    </div>
-                    <div className="flex gap-4 mt-1 text-xs text-slate-400 ml-10">
-                      <span>{entry.total_predictions} pred</span>
-                      <span className="text-green-400">{entry.exact_scores} exact</span>
+              return (
+                <div key={fixture.fixture.id} className={`bg-slate-800 rounded-lg p-3 sm:p-6 border-2 ${isDisabled ? 'border-slate-600 opacity-75' : 'border-slate-700'}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-1 sm:gap-0">
+                    <span className="text-slate-400 text-xs sm:text-sm">{fixture.league.name}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-slate-400 text-xs sm:text-sm">{new Date(fixture.fixture.date).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                      {isLocked && <span className="px-2 py-0.5 sm:py-1 bg-green-600 text-white text-xs rounded font-bold">✓</span>}
+                      {matchStarted && !isLocked && <span className="px-2 py-0.5 sm:py-1 bg-red-600 text-white text-xs rounded font-bold">Started</span>}
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Desktop Leaderboard */}
-              <table className="hidden sm:table w-full">
-                <thead className="bg-slate-900 text-slate-400 text-xs uppercase">
-                  <tr>
-                    <th className="py-3 px-6 text-left">Rank</th>
-                    <th className="py-3 px-6 text-left">User</th>
-                    <th className="py-3 px-6 text-center">Predictions</th>
-                    <th className="py-3 px-6 text-center">Exact</th>
-                    <th className="py-3 px-6 text-center">Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.map((entry, index) => (
-                    <tr key={entry.id} className={`border-b border-slate-700 ${entry.username === user?.username ? 'bg-orange-900/20' : ''}`}>
-                      <td className="py-4 px-6">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                          index === 0 ? 'bg-yellow-500 text-white' :
-                          index === 1 ? 'bg-gray-400 text-white' :
-                          index === 2 ? 'bg-orange-600 text-white' :
-                          'bg-slate-700 text-slate-300'
-                        }`}>
-                          {index + 1}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`text-white font-bold ${entry.username === user?.username ? 'text-orange-400' : ''}`}>
-                          {entry.username} {entry.username === user?.username && '(You)'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-center text-slate-300">{entry.total_predictions}</td>
-                      <td className="py-4 px-6 text-center text-green-400 font-bold">{entry.exact_scores}</td>
-                      <td className="py-4 px-6 text-center">
-                        <span className="text-2xl font-bold text-white">{entry.total_points}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  {/* Mobile Layout */}
+                  <div className="block sm:hidden">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white font-bold text-sm flex-1">{fixture.teams.home.name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="20"
+                        value={displayHome}
+                        onChange={(e) => handleInputChange(fixture.fixture.id, 'home', e.target.value)}
+                        disabled={isDisabled}
+                        className={`w-14 p-2 text-center text-xl font-bold rounded-lg border-2 outline-none ${
+                          isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
+                        }`}
+                        placeholder="-"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white font-bold text-sm flex-1">{fixture.teams.away.name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="20"
+                        value={displayAway}
+                        onChange={(e) => handleInputChange(fixture.fixture.id, 'away', e.target.value)}
+                        disabled={isDisabled}
+                        className={`w-14 p-2 text-center text-xl font-bold rounded-lg border-2 outline-none ${
+                          isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
+                        }`}
+                        placeholder="-"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden sm:grid grid-cols-7 gap-4 items-center">
+                    <div className="col-span-2 text-right">
+                      <span className="text-white font-bold">{fixture.teams.home.name}</span>
+                    </div>
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      value={displayHome}
+                      onChange={(e) => handleInputChange(fixture.fixture.id, 'home', e.target.value)}
+                      disabled={isDisabled}
+                      className={`p-3 text-center text-2xl font-bold rounded-lg border-2 outline-none ${
+                        isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
+                      }`}
+                      placeholder="-"
+                    />
+
+                    <div className="text-center"><span className="text-slate-500 font-bold">VS</span></div>
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      value={displayAway}
+                      onChange={(e) => handleInputChange(fixture.fixture.id, 'away', e.target.value)}
+                      disabled={isDisabled}
+                      className={`p-3 text-center text-2xl font-bold rounded-lg border-2 outline-none ${
+                        isDisabled ? 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed' : 'bg-slate-900 text-white border-slate-700 focus:border-orange-500'
+                      }`}
+                      placeholder="-"
+                    />
+
+                    <div className="col-span-2">
+                      <span className="text-white font-bold">{fixture.teams.away.name}</span>
+                    </div>
+                  </div>
+
+                  {canSubmit && (
+                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-700 text-center">
+                      <button
+                        onClick={() => submitPrediction(fixture.fixture.id)}
+                        className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition text-sm sm:text-base"
+                      >
+                        🔒 Lock ({input.home} - {input.away})
+                      </button>
+                    </div>
+                  )}
+
+                  {isLocked && (
+                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-700 text-center">
+                      <span className="text-green-400 text-xs sm:text-sm font-bold">✓ Locked: {savedPred.home} - {savedPred.away}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
-
-      {/* Info Banner - RESPONSIVE */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="bg-green-900/30 border-2 border-green-600 rounded-lg p-3 sm:p-4">
-          <p className="text-green-300 text-xs sm:text-sm text-center">
-            ✅ <strong>Production Ready!</strong> Using Supabase database with real authentication
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
