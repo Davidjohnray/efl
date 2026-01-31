@@ -22,6 +22,8 @@ export default function WeeklyQuiz() {
   const [loading, setLoading] = useState(true);
   const [weekNumber, setWeekNumber] = useState(0);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [alreadyTaken, setAlreadyTaken] = useState(false);
+  const [previousScore, setPreviousScore] = useState(null);
 
   const getWeekNumber = () => {
     const week4Start = new Date('2026-01-26');
@@ -53,6 +55,19 @@ export default function WeeklyQuiz() {
         .eq('id', user.id)
         .single();
       setUser(profile);
+
+      // Check if already taken this week
+      const { data: existingScore } = await supabase
+        .from('quiz_scores')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('week_number', week)
+        .single();
+
+      if (existingScore) {
+        setAlreadyTaken(true);
+        setPreviousScore(existingScore);
+      }
     }
     
     await loadQuestions(week);
@@ -251,6 +266,56 @@ export default function WeeklyQuiz() {
             <p className="text-slate-400 mb-6">
               Check back later for this week's quiz!
             </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Already taken this week (for registered users)
+  if (alreadyTaken && previousScore) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        <header className="bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h1 className="text-xl sm:text-3xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+                EFL Weekly Quiz - Week {weekNumber}
+              </h1>
+              <button
+                onClick={() => router.push('/')}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back Home
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700 text-center mb-8">
+            <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold text-white mb-4">Quiz Already Completed!</h2>
+            <p className="text-slate-400 mb-6">
+              You've already taken this week's quiz. Come back next Monday for a new quiz!
+            </p>
+            <div className="text-4xl font-bold text-indigo-400 mb-2">
+              Your Score: {previousScore.score}/10
+            </div>
+            <div className="text-slate-400">
+              Time: {formatTime(previousScore.time_taken)}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <button
+              onClick={() => router.push('/members')}
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition"
+            >
+              View Leaderboard
+            </button>
           </div>
         </main>
       </div>
