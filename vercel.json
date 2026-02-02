@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "https://lowerleaguehub.com",
+      "destination": "https://www.lowerleaguehub.com",
+      "permanent": true
+    }
+  ]
+}
