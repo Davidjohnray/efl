@@ -1,31 +1,5 @@
 'use client';
-import { NextResponse } from 'next/server';
 
-const KEY = 'c56525a302b283561295aba8f804c48d';
-
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const endpoint = searchParams.get('endpoint');
-  
-  if (!endpoint) {
-    return NextResponse.json({ error: 'Missing endpoint' }, { status: 400 });
-  }
-
-  try {
-    const response = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
-      headers: {
-        'x-apisports-key': KEY
-      },
-      cache: 'no-store'
-    });
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
-  }
-}
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Trophy, Calendar, Clock, TrendingUp, Target, BarChart3, Users, AlertTriangle, ArrowRightLeft, Star, Loader2 } from 'lucide-react';
@@ -34,6 +8,8 @@ export default function MatchCentre() {
   const router = useRouter();
   const [tab, setTab] = useState('live');
   const [live, setLive] = useState([]);
+  const [l1Live, setL1Live] = useState([]);
+  const [l2Live, setL2Live] = useState([]);
   const [l1Results, setL1Results] = useState([]);
   const [l2Results, setL2Results] = useState([]);
   const [l1Fixtures, setL1Fixtures] = useState([]);
@@ -47,13 +23,12 @@ export default function MatchCentre() {
   const KEY = 'c56525a302b283561295aba8f804c48d';
 
   const get = async (url) => {
-  // Extract the endpoint part from the full URL
-  const endpoint = url.replace('https://v3.football.api-sports.io/', '');
-  const r = await fetch(`/api/football?endpoint=${encodeURIComponent(endpoint)}`);
-  const d = await r.json();
-  console.log(endpoint, '→', d.response?.length || 0, 'matches');
-  return d.response || [];
-};
+    const endpoint = url.replace('https://v3.football.api-sports.io/', '');
+    const r = await fetch(`/api/football?endpoint=${encodeURIComponent(endpoint)}`);
+    const d = await r.json();
+    console.log(endpoint, '→', d.response?.length || 0, 'matches');
+    return d.response || [];
+  };
 
   const date = (offset) => {
     const d = new Date();
@@ -63,6 +38,13 @@ export default function MatchCentre() {
 
   const loadLive = async () => {
     const l = await get('https://v3.football.api-sports.io/fixtures?live=41-42');
+    
+    // Separate by league
+    const league1 = l.filter(m => m.league.id === 41);
+    const league2 = l.filter(m => m.league.id === 42);
+    
+    setL1Live(league1);
+    setL2Live(league2);
     setLive(l);
     setLastUpdate(new Date());
   };
@@ -135,7 +117,6 @@ export default function MatchCentre() {
     }
   };
 
-  // Auto-refresh live match details every 30 seconds
   useEffect(() => {
     if (!selectedMatch) return;
     
@@ -263,15 +244,12 @@ export default function MatchCentre() {
     const homePlayerStats = match.playerStats?.[0]?.players || [];
     const awayPlayerStats = match.playerStats?.[1]?.players || [];
 
-    // Get cards from events
     const cards = match.events?.filter(e => e.type === 'Card') || [];
     const yellowCards = cards.filter(c => c.detail === 'Yellow Card');
     const redCards = cards.filter(c => c.detail === 'Red Card');
     
-    // Get substitutions
     const subs = match.events?.filter(e => e.type === 'subst') || [];
 
-    // Get top performers
     const allPlayers = [...homePlayerStats, ...awayPlayerStats];
     const topRated = allPlayers
       .filter(p => p.statistics?.[0]?.games?.rating)
@@ -357,7 +335,6 @@ export default function MatchCentre() {
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="bg-slate-800 rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-          {/* Header */}
           <div className="p-6 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3">
@@ -390,7 +367,6 @@ export default function MatchCentre() {
               </div>
             )}
             
-            {/* Score */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 flex-1">
                 <img src={match.teams.home.logo} alt="" className="w-12 h-12" />
@@ -416,14 +392,12 @@ export default function MatchCentre() {
               {new Date(match.fixture.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • {match.fixture.venue.name}
             </div>
 
-            {/* Half-time score */}
             {match.score?.halftime && (match.score.halftime.home !== null) && (
               <div className="text-center text-slate-500 text-xs mt-1">
                 Half-time: {match.score.halftime.home} - {match.score.halftime.away}
               </div>
             )}
 
-            {/* Tab Navigation */}
             <div className="flex gap-2 mt-4 flex-wrap">
               {[
                 { id: 'stats', label: 'Statistics', icon: BarChart3 },
@@ -447,7 +421,6 @@ export default function MatchCentre() {
             </div>
           </div>
 
-          {/* Statistics Tab */}
           {activeTab === 'stats' && (
             <div className="p-6">
               {homeStats.length > 0 ? (
@@ -463,7 +436,6 @@ export default function MatchCentre() {
                 </div>
               )}
 
-              {/* Top Rated Players */}
               {topRated.length > 0 && (
                 <div className="mt-8 pt-6 border-t border-slate-700">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center">
@@ -500,10 +472,8 @@ export default function MatchCentre() {
             </div>
           )}
 
-          {/* Events Tab */}
           {activeTab === 'events' && (
             <div className="p-6 space-y-6">
-              {/* Goals */}
               {match.events && match.events.filter(e => e.type === 'Goal' && e.detail !== 'Missed Penalty').length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center">
@@ -534,7 +504,6 @@ export default function MatchCentre() {
                 </div>
               )}
 
-              {/* Cards */}
               {cards.length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center">
@@ -562,7 +531,6 @@ export default function MatchCentre() {
                 </div>
               )}
 
-              {/* Substitutions */}
               {subs.length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center">
@@ -599,12 +567,10 @@ export default function MatchCentre() {
             </div>
           )}
 
-          {/* Lineups Tab */}
           {activeTab === 'lineups' && (
             <div className="p-6">
               {homeLineup && awayLineup ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Home Team */}
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <img src={match.teams.home.logo} alt="" className="w-8 h-8" />
@@ -646,7 +612,6 @@ export default function MatchCentre() {
                     </div>
                   </div>
 
-                  {/* Away Team */}
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <img src={match.teams.away.logo} alt="" className="w-8 h-8" />
@@ -697,12 +662,10 @@ export default function MatchCentre() {
             </div>
           )}
 
-          {/* Player Stats Tab */}
           {activeTab === 'players' && (
             <div className="p-6">
               {homePlayerStats.length > 0 || awayPlayerStats.length > 0 ? (
                 <div className="space-y-8">
-                  {/* Home Team Players */}
                   {homePlayerStats.length > 0 && (
                     <div>
                       <div className="flex items-center gap-3 mb-4">
@@ -720,7 +683,6 @@ export default function MatchCentre() {
                     </div>
                   )}
 
-                  {/* Away Team Players */}
                   {awayPlayerStats.length > 0 && (
                     <div>
                       <div className="flex items-center gap-3 mb-4">
@@ -788,7 +750,6 @@ export default function MatchCentre() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Tabs */}
         <div className="flex flex-wrap gap-3 mb-8">
           <button 
             onClick={() => setTab('live')} 
@@ -799,7 +760,7 @@ export default function MatchCentre() {
             <div className={`w-3 h-3 rounded-full ${tab === 'live' ? 'bg-white animate-pulse' : 'bg-slate-500'}`} />
             Live
             <span className={`px-2 py-1 rounded-full text-xs font-bold ${tab === 'live' ? 'bg-white text-green-600' : 'bg-slate-700'}`}>
-              {live.length}
+              {l1Live.length + l2Live.length}
             </span>
           </button>
 
@@ -856,26 +817,65 @@ export default function MatchCentre() {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tab === 'live' && live.map(m => <Card key={m.fixture.id} m={m} />)}
-          {tab === 'l1-results' && l1Results.map(m => <Card key={m.fixture.id} m={m} showStats={true} />)}
-          {tab === 'l2-results' && l2Results.map(m => <Card key={m.fixture.id} m={m} showStats={true} />)}
-          {tab === 'l1-fixtures' && l1Fixtures.map(m => <Card key={m.fixture.id} m={m} />)}
-          {tab === 'l2-fixtures' && l2Fixtures.map(m => <Card key={m.fixture.id} m={m} />)}
-        </div>
+        {/* Live Tab with Separated Leagues */}
+        {tab === 'live' && (
+          <div className="space-y-8">
+            {/* League One Live */}
+            {l1Live.length > 0 && (
+              <div>
+                <div className="flex items-center gap-3 mb-4 bg-blue-900/50 p-4 rounded-lg border-2 border-blue-700">
+                  <Trophy className="w-6 h-6 text-blue-400" />
+                  <h2 className="text-xl font-bold text-white">League One</h2>
+                  <span className="ml-auto px-3 py-1 bg-green-500 text-white text-sm rounded-full font-bold flex items-center">
+                    <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+                    {l1Live.length} Live
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {l1Live.map(m => <Card key={m.fixture.id} m={m} />)}
+                </div>
+              </div>
+            )}
 
-        {/* Empty States */}
-        {tab === 'live' && live.length === 0 && (
-          <div className="bg-slate-800 rounded-xl p-16 text-center border-2 border-slate-700">
-            <Clock className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-300 text-xl font-bold mb-2">No Live Matches</p>
-            <p className="text-slate-500">Check back later or view upcoming fixtures</p>
+            {/* League Two Live */}
+            {l2Live.length > 0 && (
+              <div>
+                <div className="flex items-center gap-3 mb-4 bg-purple-900/50 p-4 rounded-lg border-2 border-purple-700">
+                  <Trophy className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-bold text-white">League Two</h2>
+                  <span className="ml-auto px-3 py-1 bg-green-500 text-white text-sm rounded-full font-bold flex items-center">
+                    <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+                    {l2Live.length} Live
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {l2Live.map(m => <Card key={m.fixture.id} m={m} />)}
+                </div>
+              </div>
+            )}
+
+            {/* No Live Matches */}
+            {l1Live.length === 0 && l2Live.length === 0 && (
+              <div className="bg-slate-800 rounded-xl p-16 text-center border-2 border-slate-700">
+                <Clock className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-300 text-xl font-bold mb-2">No Live Matches</p>
+                <p className="text-slate-500">Check back later or view upcoming fixtures</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Other Tabs */}
+        {tab !== 'live' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {tab === 'l1-results' && l1Results.map(m => <Card key={m.fixture.id} m={m} showStats={true} />)}
+            {tab === 'l2-results' && l2Results.map(m => <Card key={m.fixture.id} m={m} showStats={true} />)}
+            {tab === 'l1-fixtures' && l1Fixtures.map(m => <Card key={m.fixture.id} m={m} />)}
+            {tab === 'l2-fixtures' && l2Fixtures.map(m => <Card key={m.fixture.id} m={m} />)}
           </div>
         )}
       </div>
 
-      {/* Loading Stats Overlay */}
       {loadingStats && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-slate-800 p-8 rounded-xl text-center">
