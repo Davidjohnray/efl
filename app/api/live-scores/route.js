@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
 
+const KEY = 'c56525a302b283561295aba8f804c48d';
 let lastScores = {};
 
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db('efl-db');
+    // Fetch live matches from API-Sports
+    const response = await fetch(
+      'https://v3.football.api-sports.io/fixtures?live=41-42',
+      { headers: { 'x-apisports-key': KEY } }
+    );
     
-    const liveMatches = await db.collection('matches')
-      .find({ 
-        status: 'live',
-        league: { $in: ['League One', 'League Two'] }
-      })
-      .toArray();
+    const data = await response.json();
+    const liveMatches = data.response || [];
 
     for (const match of liveMatches) {
-      const matchId = match._id.toString();
-      const currentScore = `${match.homeScore}-${match.awayScore}`;
+      const matchId = match.fixture.id;
+      const currentScore = `${match.goals.home}-${match.goals.away}`;
       const lastScore = lastScores[matchId];
 
       if (lastScore && lastScore !== currentScore) {
@@ -26,10 +25,10 @@ export async function GET() {
         const oldAway = parseInt(oldScores[1]);
         
         let scoringTeam = '';
-        if (match.homeScore > oldHome) {
-          scoringTeam = match.homeTeam;
-        } else if (match.awayScore > oldAway) {
-          scoringTeam = match.awayTeam;
+        if (match.goals.home > oldHome) {
+          scoringTeam = match.teams.home.name;
+        } else if (match.goals.away > oldAway) {
+          scoringTeam = match.teams.away.name;
         }
 
         lastScores[matchId] = currentScore;
@@ -37,10 +36,10 @@ export async function GET() {
         return NextResponse.json({
           newGoal: true,
           team: scoringTeam,
-          homeTeam: match.homeTeam,
-          awayTeam: match.awayTeam,
-          homeScore: match.homeScore,
-          awayScore: match.awayScore
+          homeTeam: match.teams.home.name,
+          awayTeam: match.teams.away.name,
+          homeScore: match.goals.home,
+          awayScore: match.goals.away
         });
       }
 
