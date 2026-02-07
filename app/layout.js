@@ -22,29 +22,35 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#ea580c" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-R1G10L3TE0"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-R1G10L3TE0');
-          `}
-        </Script>
-        <Script id="register-sw" strategy="afterInteractive">
-          {`
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.register('/sw.js');
-            }
-          `}
-        </Script>
-      </head>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ea580c" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <Script
+    src="https://www.googletagmanager.com/gtag/js?id=G-R1G10L3TE0"
+    strategy="afterInteractive"
+  />
+  <Script id="google-analytics" strategy="afterInteractive">
+    {`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-R1G10L3TE0');
+    `}
+  </Script>
+  <Script id="register-sw" strategy="afterInteractive">
+    {`
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    `}
+  </Script>
+  <Script
+    async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3576574828135790"
+    crossOrigin="anonymous"
+    strategy="afterInteractive"
+  />
+</head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

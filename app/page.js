@@ -1,10 +1,12 @@
 'use client';
 import React from 'react';
 import ClubHeader from '@/app/components/ClubHeader';
-import { Trophy, Users, Radio, BarChart3, TrendingUp, Brain, MessageSquare, Headphones, Crown } from 'lucide-react';
+import { Trophy, Users, Radio, BarChart3, TrendingUp, Brain, MessageSquare, Headphones, Crown, Download, Smartphone } from 'lucide-react';
 import HitCounter from './components/HitCounter';
 
 export default function HomePage() {
+  const [showInstallModal, setShowInstallModal] = React.useState(false);
+
   const navigationButtons = [
     {
       title: 'Clubs',
@@ -71,6 +73,144 @@ export default function HomePage() {
     }
   ];
 
+  const InstallModal = () => {
+    if (!showInstallModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowInstallModal(false)}>
+        <div className="bg-slate-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="p-6 border-b border-slate-700 sticky top-0 bg-slate-800">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <Smartphone className="w-8 h-8 text-blue-400" />
+                <h2 className="text-2xl font-bold text-white">Install App</h2>
+              </div>
+              <button onClick={() => setShowInstallModal(false)} className="text-slate-400 hover:text-white text-3xl font-bold px-3">×</button>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-8">
+            {/* iOS Instructions */}
+            <div>
+              <div className="flex items-center gap-3 mb-4 bg-gradient-to-r from-blue-900 to-blue-800 p-4 rounded-lg">
+                <div className="text-4xl">📱</div>
+                <h3 className="text-xl font-bold text-white">iPhone / iPad (Safari)</h3>
+              </div>
+              
+              <div className="space-y-4 ml-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">1</div>
+                  <div>
+                    <p className="text-white font-medium">Open this page in Safari</p>
+                    <p className="text-slate-400 text-sm mt-1">(This only works in Safari, not Chrome or other browsers)</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">2</div>
+                  <div>
+                    <p className="text-white font-medium">Tap the Share button</p>
+                    <p className="text-slate-400 text-sm mt-1">The square with an arrow pointing up at the bottom of your screen</p>
+                    <div className="mt-2 bg-slate-700 p-3 rounded text-center">
+                      <span className="text-4xl">⬆️</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">3</div>
+                  <div>
+                    <p className="text-white font-medium">Scroll and tap "Add to Home Screen"</p>
+                    <div className="mt-2 bg-slate-700 p-3 rounded flex items-center gap-2">
+                      <span className="text-2xl">➕</span>
+                      <span className="text-white">Add to Home Screen</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">4</div>
+                  <div>
+                    <p className="text-white font-medium">Tap "Add"</p>
+                    <p className="text-slate-400 text-sm mt-1">The app icon will appear on your home screen!</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Android Instructions */}
+            <div className="pt-8 border-t border-slate-700">
+              <div className="flex items-center gap-3 mb-4 bg-gradient-to-r from-green-900 to-green-800 p-4 rounded-lg">
+                <div className="text-4xl">🤖</div>
+                <h3 className="text-xl font-bold text-white">Android (Chrome)</h3>
+              </div>
+              
+              <div className="space-y-4 ml-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">1</div>
+                  <div>
+                    <p className="text-white font-medium">Open this page in Chrome</p>
+                    <p className="text-slate-400 text-sm mt-1">Make sure you're using the Chrome browser</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">2</div>
+                  <div>
+                    <p className="text-white font-medium">Tap the three dots menu (⋮)</p>
+                    <p className="text-slate-400 text-sm mt-1">In the top right corner of Chrome</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">3</div>
+                  <div>
+                    <p className="text-white font-medium">Tap "Add to Home screen" or "Install app"</p>
+                    <div className="mt-2 bg-slate-700 p-3 rounded flex items-center gap-2">
+                      <Download className="w-5 h-5 text-white" />
+                      <span className="text-white">Add to Home screen</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">4</div>
+                  <div>
+                    <p className="text-white font-medium">Tap "Install"</p>
+                    <p className="text-slate-400 text-sm mt-1">The app will be added to your home screen!</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Benefits */}
+            <div className="pt-8 border-t border-slate-700">
+              <h3 className="text-lg font-bold text-white mb-4">✨ Benefits of Installing:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                  <div className="text-green-400 font-bold">⚡ Faster Access</div>
+                  <div className="text-slate-400 text-sm">Launch directly from your home screen</div>
+                </div>
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                  <div className="text-green-400 font-bold">📱 Full Screen</div>
+                  <div className="text-slate-400 text-sm">Works like a native app</div>
+                </div>
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                  <div className="text-green-400 font-bold">🔔 Notifications</div>
+                  <div className="text-slate-400 text-sm">Get live match updates (coming soon)</div>
+                </div>
+                <div className="bg-slate-700/50 p-3 rounded-lg">
+                  <div className="text-green-400 font-bold">📶 Offline Mode</div>
+                  <div className="text-slate-400 text-sm">View cached data without internet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen relative">
       {/* Background Image */}
@@ -114,14 +254,23 @@ export default function HomePage() {
                 </div>
               </div>
               
-              {/* Right - Members Button */}
-              <button
-                onClick={() => window.location.href = '/members'}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg font-bold transition-all text-xs sm:text-sm shadow-lg hover:shadow-yellow-500/30"
-              >
-                <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Members</span>
-              </button>
+              {/* Right - Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowInstallModal(true)}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white rounded-lg font-bold transition-all text-xs sm:text-sm shadow-lg hover:shadow-green-500/30"
+                >
+                  <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Install</span>
+                </button>
+                <button
+                  onClick={() => window.location.href = '/members'}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg font-bold transition-all text-xs sm:text-sm shadow-lg hover:shadow-yellow-500/30"
+                >
+                  <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Members</span>
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -184,13 +333,23 @@ export default function HomePage() {
         </main>
 
         {/* Footer */}
-        <footer className="mt-16 bg-slate-900/70 backdrop-blur-md border-t border-slate-700/50">
-          <div className="max-w-7xl mx-auto px-4 py-6 text-center text-slate-400">
-            <HitCounter />
-            <p>© 2026 EFL League One & Two Hub. All rights reserved.</p>
-          </div>
-        </footer>
+<footer className="mt-16 bg-slate-900/70 backdrop-blur-md border-t border-slate-700/50">
+  <div className="max-w-7xl mx-auto px-4 py-6 text-center text-slate-400">
+    <HitCounter />
+    <div className="flex justify-center gap-4 mb-3">
+      <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
+      <span>•</span>
+      <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+      <span>•</span>
+      <a href="/contact" className="hover:text-white transition-colors">Contact Us</a>
+    </div>
+    <p>© 2026 EFL League One & Two Hub. All rights reserved.</p>
+  </div>
+</footer>
       </div>
+
+      {/* Install Modal */}
+      <InstallModal />
     </div>
   );
-}"// Force deployment" 
+}
